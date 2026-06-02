@@ -1,5 +1,6 @@
 using LibraryManager.DataAccess.Repositories.Interfaces;
 using LibraryManager.DTOs.Categories;
+using LibraryManager.Models.Entities;
 using LibraryManager.Services.Interfaces;
 
 namespace LibraryManager.Services.Implementations;
@@ -13,31 +14,92 @@ public class CategoryService : ICategoryService
         _repository = repository;
     }
 
-    public Task<IEnumerable<CategoryDto>> GetAllAsync()
+    public async Task<IEnumerable<CategoryDto>> GetAllAsync()
     {
         // TODO: Map Category entities manually to CategoryDto.
-        throw new NotImplementedException("TODO: Implement Category GetAllAsync.");
+        var categories = await _repository.GetAllAsync();
+        return categories.Select(c => new CategoryDto
+        {
+            CategoryId = c.CategoryId,
+            Name = c.Name,
+            Description = c.Description
+        });
+
     }
 
-    public Task<CategoryDto?> GetByIdAsync(int id)
+    public async Task<CategoryDto?> GetByIdAsync(int id)
     {
-        throw new NotImplementedException("TODO: Implement Category GetByIdAsync.");
+        var category = await _repository.GetByIdAsync(id);
+        if (category == null) return null;
+
+        return new CategoryDto
+        {
+            CategoryId = category.CategoryId,
+            Name = category.Name,
+            Description = category.Description
+        };
     }
 
-    public Task<CategoryDto> CreateAsync(CategoryInsertDto dto)
+    public async Task<CategoryDto> CreateAsync(CategoryInsertDto dto)
     {
         // TODO: Check duplicate name and map manually.
-        throw new NotImplementedException("TODO: Implement Category CreateAsync.");
+
+        var category = new Category
+        {
+            Name = dto.Name,
+            Description = dto.Description
+        };
+
+        if (await _repository.NameExistsAsync(dto.Name))
+        {
+            throw new InvalidOperationException($"Category with name '{dto.Name}' already exists.");
+        }
+
+        var createdCategory = await _repository.AddAsync(category);
+
+        return new CategoryDto
+        {
+            CategoryId = createdCategory.CategoryId,
+            Name = createdCategory.Name,
+            Description = createdCategory.Description
+        };
+
+
     }
 
-    public Task<bool> UpdateAsync(int id, CategoryUpdateDto dto)
+    public async Task<bool> UpdateAsync(int id, CategoryUpdateDto dto)
     {
-        throw new NotImplementedException("TODO: Implement Category UpdateAsync.");
+        if (id != dto.CategoryId)
+        {
+            throw new ArgumentException("ID in URL does not match ID in body.");
+        }        
+
+        var createcategory = await _repository.GetByIdAsync(id);
+        
+        if (createcategory == null) return false;
+
+        var exists = await _repository.NameExistsAsync(dto.Name, id);
+
+        if (exists)
+        {
+            throw new InvalidOperationException($"Category with name '{dto.Name}' already exists.");
+        }
+
+
+        createcategory.Name = dto.Name;
+        createcategory.Description = dto.Description;
+        await _repository.UpdateAsync(createcategory);
+        return true;
+
+
     }
 
-    public Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
         // TODO: Check that the category has no books before deleting.
-        throw new NotImplementedException("TODO: Implement Category DeleteAsync.");
+        
+        var category = await _repository.GetByIdAsync(id); if (category == null) return false;
+
+        await _repository.DeleteAsync(category); return true;
     }
 }
