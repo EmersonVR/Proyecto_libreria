@@ -8,10 +8,12 @@ namespace LibraryManager.Services.Implementations;
 public class AuthorService : IAuthorService
 {
     private readonly IAuthorRepository _repository;
+    private readonly IBookRepository _bookRepository;
 
-    public AuthorService(IAuthorRepository repository)
+    public AuthorService(IAuthorRepository repository, IBookRepository bookRepository)
     {
         _repository = repository;
+        _bookRepository = bookRepository;
     }
 
     public async Task<IEnumerable<AuthorDto>> GetAllAsync()
@@ -85,7 +87,6 @@ public class AuthorService : IAuthorService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        // TODO: Check that the author has no books before deleting.
 
         var author = await _repository.GetByIdAsync(id);
 
@@ -94,6 +95,11 @@ public class AuthorService : IAuthorService
             return false;
         }
 
+        var booksByAuthor = await _bookRepository.GetByAuthorAsync(id);
+        if (booksByAuthor.Any())
+        {
+            throw new InvalidOperationException("Cannot delete author with associated books.");
+        }
 
         await _repository.DeleteAsync(author);
         return true;
