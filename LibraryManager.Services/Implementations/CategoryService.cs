@@ -8,10 +8,12 @@ namespace LibraryManager.Services.Implementations;
 public class CategoryService : ICategoryService
 {
     private readonly ICategoryRepository _repository;
+    private readonly IBookRepository _bookRepository;
 
-    public CategoryService(ICategoryRepository repository)
+    public CategoryService(ICategoryRepository repository, IBookRepository bookRepository)
     {
         _repository = repository;
+        _bookRepository = bookRepository;
     }
 
     public async Task<IEnumerable<CategoryDto>> GetAllAsync()
@@ -95,10 +97,20 @@ public class CategoryService : ICategoryService
     }
 
     public async Task<bool> DeleteAsync(int id)
-    {
-        // TODO: Check that the category has no books before deleting.
+    {              
+
+        var category = await _repository.GetByIdAsync(id);
         
-        var category = await _repository.GetByIdAsync(id); if (category == null) return false;
+        if (category == null)
+        {
+            return false;
+        }
+
+        var booksByCategory = await _bookRepository.GetByCategoryAsync(id);
+        if (booksByCategory.Any())
+        {
+            throw new InvalidOperationException("Cannot delete category with associated books.");
+        }
 
         await _repository.DeleteAsync(category); return true;
     }

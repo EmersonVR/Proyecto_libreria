@@ -57,6 +57,8 @@ public class BookRepository : IBookRepository
     {
         // TODO: Practice Where, Select, OrderBy, Any, FirstOrDefaultAsync and ToListAsync here.
         return await _context.Books
+            .Include(x => x.Author)
+            .Include(x => x.Category)
             .Where(x => x.Title.Contains(title))
             .OrderBy(x => x.Title)
             .ToListAsync();
@@ -64,17 +66,29 @@ public class BookRepository : IBookRepository
 
     public async Task<IEnumerable<Book>> GetByAuthorAsync(int authorId)
     {
-        return await _context.Books.Where(x => x.AuthorId == authorId).ToListAsync();
+        return await _context.Books
+            .Include(x => x.Author)
+            .Include(x => x.Category)
+            .Where(x => x.AuthorId == authorId)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<Book>> GetByCategoryAsync(int categoryId)
     {
-        return await _context.Books.Where(x => x.CategoryId == categoryId).ToListAsync();
+        return await _context.Books
+            .Include(x => x.Author)
+            .Include(x => x.Category)
+            .Where(x => x.CategoryId == categoryId)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<Book>> GetAvailableAsync()
     {
-        return await _context.Books.Where(x => x.AvailableCopies > 0).ToListAsync();
+        return await _context.Books
+            .Include(x => x.Author)
+            .Include(x => x.Category)
+            .Where(x => x.AvailableCopies > 0)
+            .ToListAsync();
     }
 
     public async Task<bool> IsbnExistsAsync(string isbn, int? excludeBookId = null)
