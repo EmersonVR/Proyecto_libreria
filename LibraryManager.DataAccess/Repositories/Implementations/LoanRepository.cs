@@ -38,26 +38,16 @@ public class LoanRepository : ILoanRepository
     {
         _context.Loans.Update(entity);
         await _context.SaveChangesAsync();
-    }
+    } 
 
-    public async Task DeleteAsync(Loan entity)
-    {
-        _context.Loans.Remove(entity);
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task<bool> ExistsAsync(int id)
-    {
-        return await _context.Loans.AnyAsync(x => x.LoanId == id);
-    }
 
     public async Task<IEnumerable<Loan>> GetActiveAsync()
     {
-        return await _context.Loans.Where(x => x.Status == LoanStatus.Active).ToListAsync();
+        return await _context.Loans.Include(x => x.Book).Include(x => x.Reader).Where(x => x.Status == LoanStatus.Active).ToListAsync();
     }
 
     public async Task<IEnumerable<Loan>> GetByReaderAsync(int readerId)
     {
-        return await _context.Loans.Where(x => x.ReaderId == readerId).ToListAsync();
+        return await _context.Loans.Include(x => x.Book).Include(x => x.Reader).Where(x => x.ReaderId == readerId).ToListAsync();
     }
 }
