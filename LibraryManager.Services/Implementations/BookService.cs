@@ -1,3 +1,4 @@
+using LibraryManager.DataAccess.Repositories.Implementations;
 using LibraryManager.DataAccess.Repositories.Interfaces;
 using LibraryManager.DTOs.Books;
 using LibraryManager.Models.Entities;
@@ -10,12 +11,14 @@ public class BookService : IBookService
     private readonly IBookRepository _repository;
     private readonly IAuthorRepository _authorRepository;
     private readonly ICategoryRepository _categoryRepository;
+    private readonly ILoanRepository _loanRepository;
 
-    public BookService(IBookRepository repository, IAuthorRepository authorRepository, ICategoryRepository categoryRepository)
+    public BookService(IBookRepository repository, IAuthorRepository authorRepository, ICategoryRepository categoryRepository, ILoanRepository loanRepository)
     {
         _repository = repository;
         _authorRepository = authorRepository;
         _categoryRepository = categoryRepository;
+        _loanRepository = loanRepository;
     }
 
     public async Task<IEnumerable<BookDto>> GetAllAsync()
@@ -161,6 +164,14 @@ public class BookService : IBookService
         {
             return false;
         }
+
+        var activeLoans = await _loanRepository.GetActiveAsync();
+
+        if (activeLoans.Any(l => l.BookId == id))
+        {
+            throw new InvalidOperationException("Cannot delete a book with active loans.");
+        }
+
         await _repository.DeleteAsync(book);
         return true;
     }

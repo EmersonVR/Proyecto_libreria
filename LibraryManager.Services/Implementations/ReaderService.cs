@@ -8,10 +8,12 @@ namespace LibraryManager.Services.Implementations;
 public class ReaderService : IReaderService
 {
     private readonly IReaderRepository _repository;
+    private readonly ILoanRepository _loanRepository;
 
-    public ReaderService(IReaderRepository repository)
+    public ReaderService(IReaderRepository repository, ILoanRepository loanRepository)
     {
         _repository = repository;
+        _loanRepository = loanRepository;
     }
 
     public async Task<IEnumerable<ReaderDto>> GetAllAsync()
@@ -108,6 +110,14 @@ public class ReaderService : IReaderService
         {
             return false;
         }
+
+        var activeLoans = await _loanRepository.GetActiveAsync();
+
+        if (activeLoans.Any(l => l.ReaderId == id))
+        {
+            throw new InvalidOperationException("Cannot delete a reader with active loans.");
+        }
+
         await _repository.DeleteAsync(reader);
         return true;
 
