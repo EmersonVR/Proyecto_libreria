@@ -14,6 +14,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularDevelopment", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddDbContext<LibraryContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
@@ -33,7 +43,7 @@ builder.Services.AddScoped<ILoanService, LoanService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<AuthorInsertValidator>();
 
-builder.Services.AddHttpClient<IExternalBookInfoService, ExternalBookInfoService>(client =>
+builder.Services.AddHttpClient("OpenLibrary", client =>
 {
     var baseUrl = builder.Configuration["ExternalServices:BooksBaseUrl"];
     if (!string.IsNullOrWhiteSpace(baseUrl))
@@ -41,6 +51,17 @@ builder.Services.AddHttpClient<IExternalBookInfoService, ExternalBookInfoService
         client.BaseAddress = new Uri(baseUrl);
     }
 });
+
+builder.Services.AddHttpClient("DummyJsonQuotes", client =>
+{
+    var baseUrl = builder.Configuration["ExternalServices:QuotesBaseUrl"];
+    if (!string.IsNullOrWhiteSpace(baseUrl))
+    {
+        client.BaseAddress = new Uri(baseUrl);
+    }
+});
+
+builder.Services.AddScoped<IExternalBookInfoService, ExternalBookInfoService>();
 
 var app = builder.Build();
 
@@ -52,6 +73,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AngularDevelopment");
 
 app.UseAuthorization();
 
