@@ -1,0 +1,25 @@
+.external-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.source,
+.quote-author {
+  color: #64748b;
+}
+
+blockquote {
+  margin: 20px 0 8px;
+  padding-left: 16px;
+  border-left: 4px solid #2a9d8f;
+  font-size: 1.15rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 960px) {
+  .external-grid {
+    grid-template-columns: 1fr;
+  }
+}

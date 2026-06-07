@@ -1,0 +1,68 @@
+<div class="page-header">
+  <h1>External Content</h1>
+</div>
+
+<div class="external-grid">
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-card-title>Open Library books</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form class="form-stack" [formGroup]="form" (ngSubmit)="loadBooks()">
+        <mat-form-field appearance="outline">
+          <mat-label>X-Practice-Source</mat-label>
+          <input matInput formControlName="practiceSource" />
+        </mat-form-field>
+        <button mat-flat-button color="primary" type="submit">
+          <mat-icon>sync</mat-icon>
+          Load books
+        </button>
+      </form>
+
+      @if (practiceSource) {
+        <p class="source">Header echoed by API: {{ practiceSource }}</p>
+      }
+
+      @if (loadingBooks) {
+        <div class="spinner-row"><mat-spinner diameter="36" /></div>
+      } @else {
+        <mat-list>
+          @for (book of books; track $index) {
+            <mat-list-item>
+              <mat-icon matListItemIcon>menu_book</mat-icon>
+              <div matListItemTitle>{{ book.title }}</div>
+              <div matListItemLine>
+                {{ book.authors.join(', ') || 'Unknown author' }}
+                @if (book.firstPublishYear) {
+                  <span> · {{ book.firstPublishYear }}</span>
+                }
+                @if (book.isbn) {
+                  <span> · ISBN {{ book.isbn }}</span>
+                }
+              </div>
+            </mat-list-item>
+          }
+        </mat-list>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-card-title>Random quote</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <button mat-flat-button color="primary" type="button" (click)="loadQuote()">
+        <mat-icon>format_quote</mat-icon>
+        Load quote
+      </button>
+
+      @if (loadingQuote) {
+        <div class="spinner-row"><mat-spinner diameter="36" /></div>
+      } @else if (quote) {
+        <blockquote>{{ quote.quote }}</blockquote>
+        <p class="quote-author">{{ quote.author }} · #{{ quote.id }}</p>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>
