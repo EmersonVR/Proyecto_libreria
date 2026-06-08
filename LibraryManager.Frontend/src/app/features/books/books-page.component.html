@@ -1,4 +1,4 @@
-<div class="page-header">
+﻿<div class="page-header">
   <h1>Books</h1>
 </div>
 
@@ -57,17 +57,17 @@
 
         <mat-form-field appearance="outline">
           <mat-label>ISBN</mat-label>
-          <input matInput formControlName="isbn" />
+          <input matInput appDigitsOnly inputmode="numeric" pattern="[0-9]*" formControlName="isbn" />
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Publication year</mat-label>
-          <input matInput type="number" formControlName="publicationYear" />
+          <input matInput appDigitsOnly type="text" inputmode="numeric" pattern="[0-9]*" formControlName="publicationYear" />
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Available copies</mat-label>
-          <input matInput type="number" formControlName="availableCopies" />
+          <input matInput appDigitsOnly type="text" inputmode="numeric" pattern="[0-9]*" formControlName="availableCopies" />
         </mat-form-field>
 
         <mat-form-field appearance="outline">
@@ -147,3 +147,5 @@
     </mat-card-content>
   </mat-card>
 </div>
+
+

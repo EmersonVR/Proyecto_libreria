@@ -1,4 +1,4 @@
-<div class="page-header">
+﻿<div class="page-header">
   <h1>Authors</h1>
 </div>
 
@@ -19,7 +19,9 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Birth date</mat-label>
-          <input matInput type="date" formControlName="birthDate" />
+          <input matInput readonly [matDatepicker]="birthDatePicker" formControlName="birthDate" />
+          <mat-datepicker-toggle matIconSuffix [for]="birthDatePicker"></mat-datepicker-toggle>
+          <mat-datepicker #birthDatePicker></mat-datepicker>
         </mat-form-field>
 
         <div class="actions">
@@ -69,3 +71,5 @@
     </mat-card-content>
   </mat-card>
 </div>
+
+

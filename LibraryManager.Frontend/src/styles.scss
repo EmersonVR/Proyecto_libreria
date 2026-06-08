@@ -1,4 +1,4 @@
-@use '@angular/material' as mat;
+﻿@use '@angular/material' as mat;
 
 html {
   @include mat.theme((
@@ -202,6 +202,18 @@ tr.mat-mdc-row:hover {
   margin-right: 6px;
 }
 
+.app-snackbar-success {
+  --mdc-snackbar-container-color: #1f7a5f;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffffff;
+}
+
+.app-snackbar-error {
+  --mdc-snackbar-container-color: #b42318;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffffff;
+}
+
 .spinner-row {
   display: flex;
   justify-content: center;
@@ -213,3 +225,4 @@ tr.mat-mdc-row:hover {
     grid-template-columns: 1fr;
   }
 }
+

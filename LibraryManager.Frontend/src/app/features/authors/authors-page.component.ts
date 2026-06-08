@@ -1,17 +1,19 @@
-import { Component, OnInit, inject } from '@angular/core';
+﻿import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { Observable } from 'rxjs';
 import { ApiErrorService } from '../../core/services/api-error.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { Author } from './author.model';
 import { AuthorsService } from './authors.service';
@@ -23,6 +25,7 @@ import { AuthorsService } from './authors.service';
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
+    MatDatepickerModule,
     MatDialogModule,
     MatFormFieldModule,
     MatIconModule,
@@ -34,9 +37,10 @@ import { AuthorsService } from './authors.service';
   templateUrl: './authors-page.component.html'
 })
 export class AuthorsPageComponent implements OnInit {
+  @ViewChild(FormGroupDirective) private formDirective?: FormGroupDirective;
   private readonly fb = inject(FormBuilder);
   private readonly service = inject(AuthorsService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notify = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   private readonly errors = inject(ApiErrorService);
 
@@ -47,7 +51,7 @@ export class AuthorsPageComponent implements OnInit {
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150)]],
-    birthDate: ['']
+    birthDate: [null as Date | null]
   });
 
   ngOnInit() {
@@ -73,7 +77,7 @@ export class AuthorsPageComponent implements OnInit {
 
     const dto = {
       name: this.form.controls.name.value.trim(),
-      birthDate: this.form.controls.birthDate.value || null
+      birthDate: this.toDateOnly(this.form.controls.birthDate.value)
     };
 
     const request: Observable<unknown> = this.editing
@@ -82,7 +86,7 @@ export class AuthorsPageComponent implements OnInit {
 
     request.subscribe({
       next: () => {
-        this.snackBar.open('Author saved.', 'Close', { duration: 2500 });
+        this.notify.success('Autor guardado correctamente.');
         this.reset();
         this.load();
       },
@@ -94,7 +98,7 @@ export class AuthorsPageComponent implements OnInit {
     this.editing = author;
     this.form.patchValue({
       name: author.name,
-      birthDate: author.birthDate ? author.birthDate.substring(0, 10) : ''
+      birthDate: author.birthDate ? new Date(author.birthDate) : null
     });
   }
 
@@ -113,7 +117,7 @@ export class AuthorsPageComponent implements OnInit {
 
       this.service.delete(author.authorId).subscribe({
         next: () => {
-          this.snackBar.open('Author deleted.', 'Close', { duration: 2500 });
+          this.notify.success('Autor eliminado correctamente.');
           this.load();
         },
         error: error => this.showError(error)
@@ -122,12 +126,28 @@ export class AuthorsPageComponent implements OnInit {
   }
 
   reset() {
+    const defaults = { name: '', birthDate: null as Date | null };
     this.editing = null;
-    this.form.reset({ name: '', birthDate: '' });
+    this.formDirective?.resetForm(defaults);
+    this.form.reset(defaults);
+  }
+
+  private toDateOnly(value: Date | null): string | null {
+    if (!value) {
+      return null;
+    }
+
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private showError(error: unknown) {
     this.loading = false;
-    this.snackBar.open(this.errors.getMessage(error), 'Close', { duration: 4500 });
+    this.notify.error(this.errors.getMessage(error));
   }
 }
+
+
+
