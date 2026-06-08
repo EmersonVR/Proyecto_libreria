@@ -1,5 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+﻿import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -7,10 +7,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { Observable } from 'rxjs';
 import { ApiErrorService } from '../../core/services/api-error.service';
+import { NotificationService } from '../../core/services/notification.service';
+import { DigitsOnlyDirective } from '../../shared/digits-only.directive';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { Reader } from './reader.model';
 import { ReadersService } from './readers.service';
@@ -27,14 +29,16 @@ import { ReadersService } from './readers.service';
     MatInputModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatTableModule
+    MatTableModule,
+    DigitsOnlyDirective
   ],
   templateUrl: './readers-page.component.html'
 })
 export class ReadersPageComponent implements OnInit {
+  @ViewChild(FormGroupDirective) private formDirective?: FormGroupDirective;
   private readonly fb = inject(FormBuilder);
   private readonly service = inject(ReadersService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notify = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   private readonly errors = inject(ApiErrorService);
 
@@ -81,7 +85,7 @@ export class ReadersPageComponent implements OnInit {
 
     request.subscribe({
       next: () => {
-        this.snackBar.open('Reader saved.', 'Close', { duration: 2500 });
+        this.notify.success('Lector guardado correctamente.');
         this.reset();
         this.load();
       },
@@ -113,7 +117,7 @@ export class ReadersPageComponent implements OnInit {
 
       this.service.delete(reader.readerId).subscribe({
         next: () => {
-          this.snackBar.open('Reader deleted.', 'Close', { duration: 2500 });
+          this.notify.success('Lector eliminado correctamente.');
           this.load();
         },
         error: error => this.showError(error)
@@ -122,12 +126,15 @@ export class ReadersPageComponent implements OnInit {
   }
 
   reset() {
+    const defaults = { name: '', email: '', phone: '' };
     this.editing = null;
-    this.form.reset({ name: '', email: '', phone: '' });
+    this.formDirective?.resetForm(defaults);
+    this.form.reset(defaults);
   }
 
   private showError(error: unknown) {
     this.loading = false;
-    this.snackBar.open(this.errors.getMessage(error), 'Close', { duration: 4500 });
+    this.notify.error(this.errors.getMessage(error));
   }
 }
+

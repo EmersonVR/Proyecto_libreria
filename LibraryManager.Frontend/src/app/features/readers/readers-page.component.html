@@ -1,4 +1,4 @@
-<div class="page-header">
+﻿<div class="page-header">
   <h1>Readers</h1>
 </div>
 
@@ -27,7 +27,7 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Phone</mat-label>
-          <input matInput formControlName="phone" />
+          <input matInput appDigitsOnly inputmode="numeric" pattern="[0-9]*" formControlName="phone" />
         </mat-form-field>
 
         <div class="actions">
@@ -81,3 +81,4 @@
     </mat-card-content>
   </mat-card>
 </div>
+

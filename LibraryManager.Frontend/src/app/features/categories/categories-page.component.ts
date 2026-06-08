@@ -1,5 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -7,10 +7,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { Observable } from 'rxjs';
 import { ApiErrorService } from '../../core/services/api-error.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { Category } from './category.model';
 import { CategoriesService } from './categories.service';
@@ -32,9 +33,10 @@ import { CategoriesService } from './categories.service';
   templateUrl: './categories-page.component.html'
 })
 export class CategoriesPageComponent implements OnInit {
+  @ViewChild(FormGroupDirective) private formDirective?: FormGroupDirective;
   private readonly fb = inject(FormBuilder);
   private readonly service = inject(CategoriesService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notify = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   private readonly errors = inject(ApiErrorService);
 
@@ -79,7 +81,7 @@ export class CategoriesPageComponent implements OnInit {
 
     request.subscribe({
       next: () => {
-        this.snackBar.open('Category saved.', 'Close', { duration: 2500 });
+        this.notify.success('Categoria guardada correctamente.');
         this.reset();
         this.load();
       },
@@ -110,7 +112,7 @@ export class CategoriesPageComponent implements OnInit {
 
       this.service.delete(category.categoryId).subscribe({
         next: () => {
-          this.snackBar.open('Category deleted.', 'Close', { duration: 2500 });
+          this.notify.success('Categoria eliminada correctamente.');
           this.load();
         },
         error: error => this.showError(error)
@@ -119,12 +121,14 @@ export class CategoriesPageComponent implements OnInit {
   }
 
   reset() {
+    const defaults = { name: '', description: '' };
     this.editing = null;
-    this.form.reset({ name: '', description: '' });
+    this.formDirective?.resetForm(defaults);
+    this.form.reset(defaults);
   }
 
   private showError(error: unknown) {
     this.loading = false;
-    this.snackBar.open(this.errors.getMessage(error), 'Close', { duration: 4500 });
+    this.notify.error(this.errors.getMessage(error));
   }
 }

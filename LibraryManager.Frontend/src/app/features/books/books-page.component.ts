@@ -1,5 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+﻿import { Component, OnInit, QueryList, ViewChildren, inject } from '@angular/core';
+import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -9,14 +9,16 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { forkJoin, Observable } from 'rxjs';
 import { ApiErrorService } from '../../core/services/api-error.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { Author } from '../authors/author.model';
 import { AuthorsService } from '../authors/authors.service';
 import { Category } from '../categories/category.model';
 import { CategoriesService } from '../categories/categories.service';
+import { DigitsOnlyDirective } from '../../shared/digits-only.directive';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { Book } from './book.model';
 import { BooksService } from './books.service';
@@ -35,16 +37,18 @@ import { BooksService } from './books.service';
     MatProgressSpinnerModule,
     MatSelectModule,
     MatSnackBarModule,
-    MatTableModule
+    MatTableModule,
+    DigitsOnlyDirective
   ],
   templateUrl: './books-page.component.html'
 })
 export class BooksPageComponent implements OnInit {
+  @ViewChildren(FormGroupDirective) private formDirectives?: QueryList<FormGroupDirective>;
   private readonly fb = inject(FormBuilder);
   private readonly booksService = inject(BooksService);
   private readonly authorsService = inject(AuthorsService);
   private readonly categoriesService = inject(CategoriesService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notify = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
   private readonly errors = inject(ApiErrorService);
 
@@ -128,8 +132,8 @@ export class BooksPageComponent implements OnInit {
     const dto = {
       title: this.form.controls.title.value.trim(),
       isbn: this.form.controls.isbn.value.trim(),
-      publicationYear: this.form.controls.publicationYear.value,
-      availableCopies: this.form.controls.availableCopies.value,
+      publicationYear: Number(this.form.controls.publicationYear.value),
+      availableCopies: Number(this.form.controls.availableCopies.value),
       authorId: this.form.controls.authorId.value,
       categoryId: this.form.controls.categoryId.value
     };
@@ -139,7 +143,7 @@ export class BooksPageComponent implements OnInit {
 
     request.subscribe({
       next: () => {
-        this.snackBar.open('Book saved.', 'Close', { duration: 2500 });
+        this.notify.success('Libro guardado correctamente.');
         this.reset();
         this.applyFilters();
       },
@@ -159,6 +163,7 @@ export class BooksPageComponent implements OnInit {
     });
   }
 
+
   confirmDelete(book: Book) {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
@@ -174,7 +179,7 @@ export class BooksPageComponent implements OnInit {
 
       this.booksService.delete(book.bookId).subscribe({
         next: () => {
-          this.snackBar.open('Book deleted.', 'Close', { duration: 2500 });
+          this.notify.success('Libro eliminado correctamente.');
           this.applyFilters();
         },
         error: error => this.showError(error)
@@ -183,19 +188,24 @@ export class BooksPageComponent implements OnInit {
   }
 
   reset() {
-    this.editing = null;
-    this.form.reset({
+    const defaults = {
       title: '',
       isbn: '',
       publicationYear: new Date().getFullYear(),
       availableCopies: 1,
       authorId: 0,
       categoryId: 0
-    });
+    };
+    this.editing = null;
+    this.formDirectives?.last?.resetForm(defaults);
+    this.form.reset(defaults);
   }
 
   private showError(error: unknown) {
     this.loading = false;
-    this.snackBar.open(this.errors.getMessage(error), 'Close', { duration: 4500 });
+    this.notify.error(this.errors.getMessage(error));
   }
 }
+
+
+

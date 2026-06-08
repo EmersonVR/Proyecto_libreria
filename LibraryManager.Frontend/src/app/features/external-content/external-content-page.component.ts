@@ -7,8 +7,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiErrorService } from '../../core/services/api-error.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { ExternalBook, ExternalQuote } from './external-content.model';
 import { ExternalContentService } from './external-content.service';
 
@@ -31,7 +32,7 @@ import { ExternalContentService } from './external-content.service';
 export class ExternalContentPageComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly service = inject(ExternalContentService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notify = inject(NotificationService);
   private readonly errors = inject(ApiErrorService);
 
   books: ExternalBook[] = [];
@@ -79,6 +80,6 @@ export class ExternalContentPageComponent implements OnInit {
       this.loadingQuote = false;
     }
 
-    this.snackBar.open(this.errors.getMessage(error), 'Close', { duration: 4500 });
+    this.notify.error(this.errors.getMessage(error));
   }
 }

@@ -1,6 +1,6 @@
-import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+﻿import { DatePipe } from '@angular/common';
+import { Component, OnInit, QueryList, ViewChildren, inject } from '@angular/core';
+import { FormBuilder, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -8,10 +8,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { forkJoin } from 'rxjs';
 import { ApiErrorService } from '../../core/services/api-error.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { Book } from '../books/book.model';
 import { BooksService } from '../books/books.service';
 import { Reader } from '../readers/reader.model';
@@ -37,11 +38,12 @@ import { LoansService } from './loans.service';
   templateUrl: './loans-page.component.html'
 })
 export class LoansPageComponent implements OnInit {
+  @ViewChildren(FormGroupDirective) private formDirectives?: QueryList<FormGroupDirective>;
   private readonly fb = inject(FormBuilder);
   private readonly loansService = inject(LoansService);
   private readonly booksService = inject(BooksService);
   private readonly readersService = inject(ReadersService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly notify = inject(NotificationService);
   private readonly errors = inject(ApiErrorService);
 
   readonly displayedColumns = ['bookTitle', 'readerName', 'loanDate', 'returnDate', 'status', 'actions'];
@@ -114,8 +116,8 @@ export class LoansPageComponent implements OnInit {
 
     this.loansService.create(this.form.getRawValue()).subscribe({
       next: () => {
-        this.snackBar.open('Loan created.', 'Close', { duration: 2500 });
-        this.form.reset({ bookId: 0, readerId: 0 });
+        this.notify.success('Prestamo creado correctamente.');
+        this.resetForm();
         this.loadInitialData();
       },
       error: error => this.showError(error)
@@ -125,15 +127,22 @@ export class LoansPageComponent implements OnInit {
   returnLoan(loan: Loan) {
     this.loansService.returnLoan(loan.loanId).subscribe({
       next: () => {
-        this.snackBar.open('Loan returned.', 'Close', { duration: 2500 });
+        this.notify.success('Prestamo devuelto correctamente.');
         this.loadInitialData();
       },
       error: error => this.showError(error)
     });
   }
 
+  private resetForm() {
+    const defaults = { bookId: 0, readerId: 0 };
+    this.formDirectives?.last?.resetForm(defaults);
+    this.form.reset(defaults);
+  }
+
   private showError(error: unknown) {
     this.loading = false;
-    this.snackBar.open(this.errors.getMessage(error), 'Close', { duration: 4500 });
+    this.notify.error(this.errors.getMessage(error));
   }
 }
+
